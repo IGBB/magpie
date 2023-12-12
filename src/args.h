@@ -4,7 +4,8 @@
 extern const char* const program_version;
 
 typedef struct {
-    char *script, *agp, *out;
+  int simplify;
+  char *script, *agp, *out;
 } arguments_t;
 
 arguments_t parse_options(int argc, char **argv);

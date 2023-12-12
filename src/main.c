@@ -38,7 +38,10 @@ int main(int argc, char *argv[]) {
     agp_graph_t * graph = agp_graph_read(agp);
 
     run_script(script, graph);
-
+    if(args.simplify){
+      fprintf(stderr, "Simplified %d components\n",
+              agp_graph_simplify(graph));
+    };
     agp_graph_print(graph, out);
 
     agp_graph_destroy(graph);

@@ -521,3 +521,80 @@ void agp_graph_create(agp_graph_t *agp,
   kh_value(agp->objects, k) = segment;
 
 }
+
+agp_scaffold_t * __next_sequence(agp_scaffold_t* cur){
+  agp_scaffold_t* ret = cur;
+
+  while(ret){
+    ret = ret->next;
+    if(ret && ret->type == 'W')
+      break;
+  }
+  
+  return ret;
+}
+
+int __is_contiguous(agp_scaffold_t* a, agp_scaffold_t* b){
+  if(a->type != 'W' || a->type != b->type)
+    return 0;
+       
+  if(strcmp(a->component.seq.name, b->component.seq.name) != 0)
+    return 0;
+
+  if(a->component.seq.orientation != b->component.seq.orientation)
+    return 0;
+
+  long diff = 0;
+  if(a->component.seq.orientation == '-' ){
+    diff = a->component.seq.start - b->component.seq.end;
+  }else{
+    diff = b->component.seq.start - a->component.seq.end;
+  }
+
+  return (diff == 1);
+}
+
+int agp_graph_simplify(agp_graph_t* agp){
+  int size = kh_size(agp->objects);
+  int ret = 0;
+  agp_scaffold_t ** objects = __sorted_objects(agp);  
+
+  int i;
+  for(i = 0; i < size; i++){
+    agp_scaffold_t* cur = objects[i];
+    agp_scaffold_t* next = __next_sequence(cur);
+    while(cur != NULL && next != NULL){
+      if(__is_contiguous(cur, next)){
+        ret++;
+        cur->next = next->next;
+        if(next->next) next->next->prev = cur;
+
+        /* set start and end according to orientation */
+        if(cur->component.seq.orientation == '-')
+          cur->component.seq.start = next->component.seq.start;
+        else
+          cur->component.seq.end = next->component.seq.end;
+
+        /* free gaps and next */
+        agp_scaffold_t *s,*t;
+        s = agp_graph_isolate(agp, next, next);
+        while(s){
+          t = s->next;
+          free(s);
+          s = t;
+        }
+
+
+      }else{
+        cur = next;
+      }
+
+      next = __next_sequence(cur);
+    }
+
+  }
+
+  free(objects);
+  return ret;
+  
+}

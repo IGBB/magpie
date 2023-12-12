@@ -38,6 +38,11 @@ typedef struct {
 } agp_graph_t;
 
 agp_graph_t * agp_graph_read(FILE*);
+
+/* simplify graph by combining contiguous components.
+   return number of components combined */
+int agp_graph_simplify(agp_graph_t*);
+
 int agp_graph_print(agp_graph_t*, FILE*);
 void agp_graph_destroy(agp_graph_t*);
 

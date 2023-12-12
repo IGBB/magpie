@@ -9,6 +9,9 @@
 const char* const help_message =
   "Usage: magpie [OPTION...] <SCRIPT> [<AGP>]\n"
   "mAGPie -- Curate AGP files\n\n"
+  "  -s, --simplify         Simplify the agp output. If adjacent "
+  "                         components in the agp file are contiguous,\n"
+  "                         then combine and remove internal gap.\n"
   "  -o, --out FILE         Output file (default: stdout)\n"
   "  -h, --help             Give this help list\n"
   "\n"
@@ -18,6 +21,7 @@ const char* const help_message =
 
 static ko_longopt_t longopts[] = {
 
+    { "simplify", ko_no_argument, 's' },
     { "out", ko_required_argument, 'o' },
     { "help", ko_no_argument, 'h' },
 
@@ -26,24 +30,23 @@ static ko_longopt_t longopts[] = {
 
 
 arguments_t parse_options(int argc, char **argv) {
-  arguments_t arguments = {
-                                .script   = NULL,
-                                .agp     = "/dev/stdin",
-                                .out      = "/dev/stdout"
+  arguments_t arguments = { .simplify = 0,
+                            .script   = NULL,
+                            .agp     = "/dev/stdin",
+                            .out      = "/dev/stdout"
   };
 
 
   ketopt_t opt = KETOPT_INIT;
 
   int  c;
-  while ((c = ketopt(&opt, argc, argv, 1, "o:h", longopts)) >= 0) {
+  while ((c = ketopt(&opt, argc, argv, 1, "o:sh", longopts)) >= 0) {
     switch(c){
-      case 'o': arguments.out    = opt.arg;       break;
-
+      case 'o': arguments.out      = opt.arg; break;
+      case 's': arguments.simplify = 1;       break;
       case 'h':
         printf(help_message);
         exit(EXIT_SUCCESS);
-
     };
   }
 
