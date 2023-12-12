@@ -12,9 +12,13 @@ make
 #+end_src
 *** Usage
 #+begin_example
+Expected at least one and at most two positional argument
 Usage: magpie [OPTION...] <SCRIPT> [<AGP>]
 mAGPie -- Curate AGP files
 
+  -s, --simplify         Simplify the agp output. If adjacent 
+                         components in the agp file are contiguous,
+                         then combine and remove internal gap.
   -o, --out FILE         Output file (default: stdout)
   -h, --help             Give this help list
 

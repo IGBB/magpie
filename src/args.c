@@ -9,7 +9,7 @@
 const char* const help_message =
   "Usage: magpie [OPTION...] <SCRIPT> [<AGP>]\n"
   "mAGPie -- Curate AGP files\n\n"
-  "  -s, --simplify         Simplify the agp output. If adjacent "
+  "  -s, --simplify         Simplify the agp output. If adjacent \n"
   "                         components in the agp file are contiguous,\n"
   "                         then combine and remove internal gap.\n"
   "  -o, --out FILE         Output file (default: stdout)\n"
