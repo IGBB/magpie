@@ -1,0 +1,50 @@
+#+TITLE: mAGPie
+
+mAGPie is a domian specific language (DSL) and interpreter designed to
+help curate AGP (a golden path) files. It's been mostly used with Hi-C
+contact maps to fix assembly errors.
+
+*** Interpreter
+**** Compile
+#+begin_src sh
+git submodule update --init --recursive
+make
+#+end_src
+**** Usage
+#+begin_example
+Usage: magpie [OPTION...] <SCRIPT> [<AGP>]
+mAGPie -- Curate AGP files
+
+  -o, --out FILE         Output file (default: stdout)
+  -h, --help             Give this help list
+
+If no AGP file is given, it's read from stdin
+Report bugs to github.com/IGBB/magpie.
+#+end_example
+
+*** Language
+
+The entire script is read into memory.
+
+Comments are then removed. A comment starts with '#' and stop at the
+end of the current line.
+
+Each word is separated by any number of spaces, newlines, and/or
+semi-colons. 
+
+{segment} => {sequence}[ THRU {sequence|END}]
+{sequence} => {contig name}:{contig start}-{contig stop}
+
+**** Currently supported verbs
+  - MOVE {segment} {BEFORE|AFTER} {sequence} :: move segment before or
+    after referenced sequence. segment and sequence do not need to be
+    on the same scaffold
+  - {REV|REVCOMP} {segment} :: Reverse or reverse complment the
+    segment
+  - CREATE {scaffold} FROM {segment} :: Create an new scaffold from
+    segment
+
+
+
+
+  
