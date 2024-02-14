@@ -30,6 +30,18 @@ char* __slurp_file(FILE* file){
   return text;
 }
 
+cstr_t* __next_token(kdq_t(cstr_t)* tokens, int expected){
+  cstr_t* token = kdq_shift(cstr_t, tokens);
+
+  if(!token && expected) {
+    fprintf(stderr, "Unexpected end to script\n");
+    exit(EXIT_FAILURE);
+  }
+
+   return token;
+}
+
+
 typedef struct { agp_scaffold_t *left, *right; } segment_t;
 
 agp_scaffold_t* __get_component(agp_graph_t * graph, char* key){
@@ -144,6 +156,30 @@ void __parse_create(kdq_t(cstr_t)* tokens, agp_graph_t* graph){
 
 }
 
+void __parse_split(kdq_t(cstr_t)* tokens, agp_graph_t* graph){
+  cstr_t* token = __next_token(tokens, 1);
+  agp_scaffold_t* target = __get_component(graph, *token);
+
+
+  token = __next_token(tokens, 1);
+
+  if(strcmp(*token, "AT") != 0 ){
+    fprintf(stderr, "Expected AT after sequence in SPLIT\n");
+    exit(EXIT_FAILURE);
+  }
+
+  token = __next_token(tokens, 1);
+
+  long long pos = atoll(*token);
+  if( pos <= 0 ) {
+    fprintf(stderr, "Position must be a positive integer: %s\n", *token);
+    exit(EXIT_FAILURE);
+  }
+
+  agp_graph_split(graph, target, (unsigned long) pos);
+}
+
+
 void run_script(FILE* file, agp_graph_t* graph){
   char* text = __slurp_file(file);
   kdq_t(cstr_t)* tokens = kdq_init(cstr_t);
@@ -162,6 +198,7 @@ void run_script(FILE* file, agp_graph_t* graph){
     else if(strcmp(token, "REV"    ) == 0) __parse_reverse(tokens, graph, 0);
     else if(strcmp(token, "REVCOMP") == 0) __parse_reverse(tokens, graph, 1);
     else if(strcmp(token, "CREATE" ) == 0) __parse_create(tokens, graph);
+    else if(strcmp(token, "SPLIT" )  == 0) __parse_split(tokens, graph);
     else{
       fprintf(stderr, "Unknown directive: %s", token);
       exit(EXIT_FAILURE);

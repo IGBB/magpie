@@ -66,4 +66,8 @@ void agp_graph_create(agp_graph_t *agp,
                       char* object,
                       agp_scaffold_t * segment);
 
+void agp_graph_split(agp_graph_t *agp,
+                      agp_scaffold_t * segment,
+                      unsigned long position);
+
 #endif // AGP_GRAPH_H_

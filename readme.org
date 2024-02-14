@@ -47,9 +47,6 @@ semi-colons.
     segment
   - CREATE {scaffold} FROM {segment} :: Create an new scaffold from
     segment
-
-*** Planned
-
   - SPLIT {sequence} AT {pos} :: Create two recods from the sequence:
     {contig name}:{contig start}-{pos} and {contig name}:{pos+1}-{contig stop}
 

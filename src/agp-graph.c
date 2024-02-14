@@ -6,6 +6,13 @@
 
 #include "klib/khash.h"
 
+
+#define __link_segments(l,r) (l)->next = (r); (r)->prev = (l);
+#define __create_key(comp) \
+            snprintf((comp).key, 1024, "%s:%lu-%lu",  \
+                     (comp).name, (comp).start, (comp).end);
+
+
 __KHASH_IMPL(agp_graph,  ,
              kh_cstr_t, agp_scaffold_t*,
              1, kh_str_hash_func, kh_str_hash_equal)
@@ -495,6 +502,72 @@ void agp_graph_reverse(agp_graph_t *agp,
 
 
 }
+
+
+void agp_graph_split(agp_graph_t *agp,
+                     agp_scaffold_t * segment,
+                     unsigned long position){
+  int ret;
+  khiter_t k;
+
+  /* validate position is between segments start/end */
+  if(position >= segment->component.seq.end ||
+     position <= segment->component.seq.start) {
+        fprintf(stderr, "Position (%lu) must be between start (%lu) "
+                "and end (%lu) of segment\n", position,
+                segment->component.seq.start,
+                segment->component.seq.end);
+    exit(EXIT_FAILURE);
+  }
+
+  /* remove segment from component hash */
+  k = kh_get(agp_graph, agp->components, segment->component.seq.key);
+  kh_del(agp_graph, agp->components, k);
+
+  /* create gap to insert between split segment */
+  agp_scaffold_t * gap = __agp_create_gap(segment->object.name);
+
+  /*copy segment*/
+  agp_scaffold_t * new = malloc(sizeof(agp_scaffold_t));
+  memcpy(new, segment, sizeof(agp_scaffold_t));
+
+  /* change start/end for segments */
+  segment->component.seq.end = position;
+  new->component.seq.start = position + 1;
+
+  /* link segments */
+  __link_segments(segment, gap);
+  __link_segments(gap, new);
+
+  /* create new keys */
+  __create_key(segment->component.seq);
+  __create_key(new->component.seq);
+
+  /* add start segment to hash */
+  k = kh_put(agp_graph, agp->components,
+             segment->component.seq.key, &ret);
+
+  if(ret == 0){
+    fprintf(stderr, "Can't parse agp file: sequence component "
+            "segment found more than once\n");
+    exit(EXIT_FAILURE);
+  }
+
+  kh_value(agp->components, k) = segment;
+
+  /* add end segment to hash */
+  k = kh_put(agp_graph, agp->components,
+             new->component.seq.key, &ret);
+
+  if(ret == 0){
+    fprintf(stderr, "Can't parse agp file: sequence component "
+            "segment found more than once\n");
+    exit(EXIT_FAILURE);
+  }
+
+  kh_value(agp->components, k) = new;
+}
+
 
 void agp_graph_create(agp_graph_t *agp,
                       char* object,
