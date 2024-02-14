@@ -2,6 +2,9 @@
 
 #include "klib/kdq.h"
 
+#define fail(...) do { fprintf(stderr, __VA_ARGS__); \
+    exit(EXIT_FAILURE); } while (0);
+
 typedef char* cstr_t;
 KDQ_INIT(cstr_t);
 
@@ -33,10 +36,7 @@ char* __slurp_file(FILE* file){
 cstr_t* __next_token(kdq_t(cstr_t)* tokens, int expected){
   cstr_t* token = kdq_shift(cstr_t, tokens);
 
-  if(!token && expected) {
-    fprintf(stderr, "Unexpected end to script\n");
-    exit(EXIT_FAILURE);
-  }
+  if(!token && expected) fail("Unexpected end to script\n");
 
    return token;
 }
@@ -46,23 +46,20 @@ typedef struct { agp_scaffold_t *left, *right; } segment_t;
 
 agp_scaffold_t* __get_component(agp_graph_t * graph, char* key){
   agp_scaffold_t *comp = agp_graph_component(graph, key);
-  if(!comp) {
-    fprintf(stderr, "Cannot find %s in agp file\n", key);
-    exit(EXIT_FAILURE);
-  }
-  return comp;  
+  if(!comp) fail("Cannot find %s in agp file\n", key);
+
+  return comp;
 }
 
 int __parse_segment(kdq_t(cstr_t)* tokens, agp_graph_t* graph, segment_t* seg){
   int ret = 1;
-  cstr_t* token = kdq_shift(cstr_t, tokens);
-
+  cstr_t* token = __next_token(tokens, 1);
   seg->left  = __get_component(graph, *token);
   seg->right = seg->left;
 
   if(kdq_size(tokens) > 0 && strcmp(kdq_first(tokens), "THRU") == 0){
     kdq_shift(cstr_t, tokens); // remove THRU
-    token = kdq_shift(cstr_t, tokens);
+    token = __next_token(tokens, 1);
 
     if(strcmp(*token, "END") == 0) {
       agp_scaffold_t* cur = seg->left;
@@ -81,12 +78,11 @@ int __parse_segment(kdq_t(cstr_t)* tokens, agp_graph_t* graph, segment_t* seg){
     cur = cur->next;
   }
 
-  if(!cur){
-    fprintf(stderr,"Given segment ends are not connected: %s - %s",
-            seg->left->component.seq.key, seg->right->component.seq.key);
-    exit(EXIT_FAILURE);    
-  }
-  
+  if(!cur)
+    fail("Given segment ends are not connected: %s - %s",
+         seg->left->component.seq.key,
+         seg->right->component.seq.key);
+
   return ret;
 }
 
@@ -95,21 +91,15 @@ void __parse_move(kdq_t(cstr_t)* tokens, agp_graph_t* graph){
   int seg_size = __parse_segment(tokens, graph, &seg);
   
   agp_scaffold_t* target = NULL;
-  cstr_t* token = kdq_shift(cstr_t, tokens);
+  cstr_t* token = __next_token(tokens, 1);
   
-  if(!token) {
-    fprintf(stderr, "Unexpected end to script\n");
-    exit(EXIT_FAILURE);
-  }
-
   int direction = 0;
   if(strcmp(*token, "AFTER") == 0){
     direction = 1;
   } else if(strcmp(*token, "BEFORE") == 0){
     direction = -1;
   } else {
-    fprintf(stderr, "Expected BEFORE or AFTER");
-    exit(EXIT_FAILURE);
+    fail("Expected BEFORE or AFTER");
   }
 
   token = kdq_shift(cstr_t, tokens);
@@ -128,53 +118,35 @@ void __parse_reverse(kdq_t(cstr_t)* tokens, agp_graph_t* graph, int complement){
 
 void __parse_create(kdq_t(cstr_t)* tokens, agp_graph_t* graph){
   cstr_t object;
-  cstr_t* token = kdq_shift(cstr_t, tokens);
-
-  if(!token) {
-    fprintf(stderr, "Unexpected end to script\n");
-    exit(EXIT_FAILURE);
-  }
+  cstr_t* token = __next_token(tokens, 1);
   object = *token;
 
-  token = kdq_shift(cstr_t, tokens);
-  if(!token) {
-    fprintf(stderr, "Unexpected end to script\n");
-    exit(EXIT_FAILURE);
-  }
-
-  if(strcmp(*token, "FROM") != 0 ){
-    fprintf(stderr, "Expected FROM after name of new object in CREATE\n");
-    exit(EXIT_FAILURE);
-  }
-
+  token = __next_token(tokens, 1);
+  if(strcmp(*token, "FROM") != 0 )
+    fail("Expected FROM after name of new object in CREATE\n");
 
   segment_t seg;
   int size = __parse_segment(tokens, graph, &seg);
 
   agp_scaffold_t * start = agp_graph_isolate(graph, seg.left, seg.right);
   agp_graph_create(graph, object, start);
-
 }
 
 void __parse_split(kdq_t(cstr_t)* tokens, agp_graph_t* graph){
   cstr_t* token = __next_token(tokens, 1);
   agp_scaffold_t* target = __get_component(graph, *token);
 
-
   token = __next_token(tokens, 1);
 
-  if(strcmp(*token, "AT") != 0 ){
-    fprintf(stderr, "Expected AT after sequence in SPLIT\n");
-    exit(EXIT_FAILURE);
-  }
+  if(strcmp(*token, "AT") != 0 )
+    fail("Expected AT after sequence in SPLIT\n");
+
 
   token = __next_token(tokens, 1);
 
   long long pos = atoll(*token);
-  if( pos <= 0 ) {
-    fprintf(stderr, "Position must be a positive integer: %s\n", *token);
-    exit(EXIT_FAILURE);
-  }
+  if( pos <= 0 )
+    fail("Position must be a positive integer: %s\n", *token);
 
   agp_graph_split(graph, target, (unsigned long) pos);
 }
@@ -200,8 +172,7 @@ void run_script(FILE* file, agp_graph_t* graph){
     else if(strcmp(token, "CREATE" ) == 0) __parse_create(tokens, graph);
     else if(strcmp(token, "SPLIT" )  == 0) __parse_split(tokens, graph);
     else{
-      fprintf(stderr, "Unknown directive: %s", token);
-      exit(EXIT_FAILURE);
+      fail("Unknown directive: %s", token);
     }
   }
 
