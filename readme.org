@@ -36,19 +36,21 @@ end of the current line.
 Each word is separated by any number of spaces, newlines, and/or
 semi-colons. 
 
+#+begin_example
 {segment} => {sequence}[ THRU {sequence|END}]
 {sequence} => {contig name}:{contig start}-{contig stop}
+#+end_example
 
 *** Currently supported verbs
-  - MOVE {segment} {BEFORE|AFTER} {sequence} :: move segment before or
+  - =MOVE {segment} {BEFORE|AFTER} {sequence}= :: move segment before or
     after referenced sequence. segment and sequence do not need to be
     on the same scaffold
-  - {REV|REVCOMP} {segment} :: Reverse or reverse complment the
+  - ={REV|REVCOMP} {segment}= :: Reverse or reverse complment the
     segment
-  - CREATE {scaffold} FROM {segment} :: Create an new scaffold from
+  - =CREATE {scaffold} FROM {segment}= :: Create an new scaffold from
     segment
-  - SPLIT {sequence} AT {pos} :: Create two recods from the sequence:
-    {contig name}:{contig start}-{pos} and {contig name}:{pos+1}-{contig stop}
+  - =SPLIT {sequence} AT {pos}= :: Create two recods from the sequence:
+    ={contig name}:{contig start}-{pos}= and ={contig name}:{pos+1}-{contig stop}=
 
 
   
