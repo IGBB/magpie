@@ -111,16 +111,12 @@ void agp_graph_destroy(agp_graph_t* agp){
   khiter_t k;
   agp_scaffold_t *record, *next;
 
-  for (k = kh_begin(agp->objects);
-       k != kh_end(agp->objects);
+  for (k = kh_begin(agp->components);
+       k != kh_end(agp->components);
        k++){  // traverse hash
-    if (kh_exist(agp->objects, k)){
-      record = kh_value(agp->objects, k);
-      while( record != NULL) {  // tranverse linked list
-        next = record->next;
+    if (kh_exist(agp->components, k)){
+      record = kh_value(agp->components, k);
         free(record);
-        record = next;
-      }
     }
     
   }
@@ -304,7 +300,7 @@ agp_scaffold_t * agp_graph_isolate(agp_graph_t *agp,
 
   /* Selected components are in middle object, need to connect the two
      with new gap */                    
-  if(seqs[1] && seqs[2]) {
+  if(seqs[0] && seqs[1]) {
 
     agp_scaffold_t * gap = __agp_create_gap(left->object.name);
 
